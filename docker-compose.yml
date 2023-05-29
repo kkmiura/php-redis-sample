@@ -1,0 +1,58 @@
+version: '3.9'
+
+services:
+  php:
+    build: ./php
+    ports:
+      - 80:80
+    volumes:
+      - ./php/src/:/var/www/html/
+      - ./php/src/composer.json:/var/www/html/composer.json
+    user: "1000"
+    networks:
+      - redis_network
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      TZ: Asia/Tokyo
+      MYSQL_ROOT_PASSWORD: mysql
+      MYSQL_DATABASE: db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    volumes:
+      - ./sql/:/docker-entrypoint-initdb.d/
+      - ./data/mysql:/var/lib/mysql
+    networks:
+      - redis_network
+  
+  redis:
+    image: redis:latest
+    ports: 
+      - 6379
+    volumes:
+      - ./conf/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    deploy:
+      replicas: 6
+    networks:
+      - redis_network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    depends_on:
+      - mysql
+    environment:
+      PMA_ARBITRARY: 1
+      PMA_HOSTS: mysql
+      PMA_USER: root
+      PMA_PASSWORD: mysql
+    ports:
+      - "3000:80"
+    volumes:
+      - ./phpmyadmin/sessions:/sessions
+    networks:
+      - redis_network
+
+networks:
+  redis_network:

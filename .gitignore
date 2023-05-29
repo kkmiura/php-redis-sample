@@ -1,0 +1,4 @@
+/data
+/phpmyadmin
+composer.lock
+php/src/vendor
